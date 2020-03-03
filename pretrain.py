@@ -12,6 +12,8 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 from fp16 import FP16_Module, FP16_Optimizer
+from radam import RAdam
+
 
 import data
 import model as m
@@ -68,7 +70,8 @@ def setup_model_and_optim(args, train_data, tokenizer):
         optim_choice = 'Adam' if args.stlr_cut_frac else args.optim
         if args.fp16:
             model = FP16_Module(model)
-            optim = eval('torch.optim.'+args.optim)(model.parameters(), lr=args.lr)
+            #optim = eval('torch.optim.'+args.optim)(model.parameters(), lr=args.lr)
+            optim = RAdam(model.parameters(), lr=args.lr)
             optim = FP16_Optimizer(optim,
                                static_loss_scale=args.loss_scale,
                                dynamic_loss_scale=args.dynamic_loss_scale)
@@ -180,9 +183,9 @@ def train(epoch, model, optim, train_data, LR, LR_Warmer, criterion, args, total
     max_iters = args.train_iters
     def log(epoch, i, lr, ms_iter, total_time, loss, scale):
         print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:.2E} | ms/batch {:.3E} | total time {:.3E}\
-                  loss {:.2E} | ppl {:8.2f} | loss scale {:8.2f}'.format(
+                  loss {:.2E} | ppl {:8.2f} | bpc {:8.2f} |loss scale {:8.2f}'.format(
                       epoch, i, max_iters, lr,
-                      ms_iter, total_time, loss, math.exp(min(loss, 20)), scale
+                      ms_iter, total_time, loss, math.exp(min(loss, 20)), min(loss, 20)/math.log(2), scale
                   )
         )
     i = 0
@@ -288,9 +291,11 @@ def main():
     parser = add_model_args(parser)
     data_config, data_parser = add_unsupervised_data_args(parser)
     args = parser.parse_args()
+    print(args)
 
     torch.backends.cudnn.enabled = False
     args.cuda = torch.cuda.is_available()
+    args.pin_memory = args.cuda  
 
     if args.multinode_init:
         args.rank = int(os.getenv('RANK', 0))
@@ -321,7 +326,11 @@ def main():
     if args.loss_scale != 1 and args.dynamic_loss_scale:
         raise RuntimeError("Static loss scale and dynamic loss scale cannot be used together.")
 
-    (train_data, val_data, test_data), tokenizer = data_config.apply(args)
+    (train_data, val_data, test_data), tokenizer, L = data_config.apply(args)
+    
+    print("data lengths: ", L)
+    
+    args.train_iters = L[0]
 
     args.data_size = tokenizer.num_tokens
     model, optim, LR, LR_Warmer, criterion = setup_model_and_optim(args, train_data, tokenizer)

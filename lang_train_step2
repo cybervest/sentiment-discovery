@@ -1,0 +1,2 @@
+#!/bin/bash
+CUDA_VISIBLE_DEVICES=1 python3 pretrain.py --load lang_model_gpu1.pt --fp16 --data ./data/twits/sorted_all_dedup.csv --text-key text --label-key sentiment --epochs 20 --train-iters 20000 --batch-size 64 --lr 1e-4 --save lang_model_gpu1-stwits.pt

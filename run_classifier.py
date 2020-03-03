@@ -28,6 +28,7 @@ def get_data_and_args():
     args = parser.parse_args()
 
     args.cuda = torch.cuda.is_available()
+    args.pin_memory = args.cuda
     args.shuffle=False
 
     if args.seed is not -1:

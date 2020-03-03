@@ -114,6 +114,7 @@ class SplitDataset(data.Dataset):
         split_inds (1D array-like): List of indices part of subset
     """
     def __init__(self, ds, split_inds, **kwargs):
+        super(SplitDataset, self).__init__()
         self.split_inds = list(split_inds)
         self.wrapped_data = ds
         self.is_lazy = isinstance(ds, lazy_array_loader)
@@ -198,6 +199,7 @@ class csv_dataset(data.Dataset):
     def __init__(self, path, tokenizer=None, preprocess_fn=None, delim=',',
                 binarize_sent=False, drop_unlabeled=False, text_key='sentence', label_key='label',
                 **kwargs):
+        super(csv_dataset, self).__init__()
         self.preprocess_fn = preprocess_fn
         self.tokenizer = self.SetTokenizer(tokenizer)
         self.path = path

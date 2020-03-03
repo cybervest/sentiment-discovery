@@ -202,7 +202,7 @@ def add_sentiment_transfer_args(parser):
     data_config, data_group = configure_data(parser)
     # Set transfer learning data option defaults
     data_group.set_defaults(split='1.', data=['data/binary_sst/train.csv'])
-    data_group.set_defaults(valid=['data/binary_sst/val.csv'], test=['data/binary_sst/test.csv'])
+    data_group.set_defaults(valid=None, test=None)
     # Create transfer-learning-specific options
     group = parser.add_argument_group('sentiment_transfer', 'arguments used for sentiment_transfer script')
     group.add_argument('--mcc', action='store_true',

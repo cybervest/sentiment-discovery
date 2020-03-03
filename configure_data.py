@@ -37,7 +37,7 @@ def make_loaders(opt):
     # data_loader_args = {'num_workers': 0, 'shuffle': opt.shuffle, 'batch_size': batch_size,
     data_loader_args = {'num_workers': 4, 'shuffle': opt.shuffle, 'batch_size': batch_size,
     # data_loader_args = {'num_workers': 1, 'shuffle': opt.shuffle, 'batch_size': batch_size,
-                    'pin_memory': True, 'transpose': opt.transpose, 'distributed': opt.world_size > 1,
+                    'pin_memory': opt.pin_memory, 'transpose': opt.transpose, 'distributed': opt.world_size > 1,
                     'rank': opt.rank, 'world_size': opt.world_size, 'drop_last': opt.world_size > 1}
     if opt.data_set_type == 'L2R':
         loader_type = data_utils.ShardLoader
@@ -85,6 +85,7 @@ def make_loaders(opt):
         eval_set_args['path'] = opt.test
         test, _ = data_utils.make_dataset(**eval_set_args)
 
+    L = (len(train), len(valid), len(test))
 
     if train is not None and opt.batch_size > 0:
         train = loader_type(train, **data_loader_args)
@@ -92,7 +93,7 @@ def make_loaders(opt):
         valid = loader_type(valid, **eval_loader_args)
     if test is not None:
         test = loader_type(test, **eval_loader_args)
-    return (train, valid, test), tokenizer
+    return (train, valid, test), tokenizer, L
 
 def should_split(split):
     return max(split) != 1.

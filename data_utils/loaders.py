@@ -94,12 +94,13 @@ class DataLoader(data.DataLoader):
                  num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False,
                  transpose=False, world_size=2, rank=-1, distributed=False, wrap_last=False,
                  timeout=0, worker_init_fn=None):
-        self.dataset = dataset
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.collate_fn = collate_fn
-        self.pin_memory = pin_memory
-        self.drop_last = drop_last
+        super(DataLoader, self).__init__(dataset, batch_size = batch_size, num_workers = num_workers, collate_fn = collate_fn, pin_memory = pin_memory, drop_last = drop_last, sampler = sampler, batch_sampler = batch_sampler)
+#        self.dataset = dataset
+#        self.batch_size = batch_size
+#        self.num_workers = num_workers
+#        self.collate_fn = collate_fn
+#        self.pin_memory = pin_memory
+#        self.drop_last = drop_last
         self.timeout = timeout
         self.worker_init_fn = worker_init_fn
         if timeout < 0:
@@ -132,8 +133,8 @@ class DataLoader(data.DataLoader):
             else:
                 batch_sampler = BatchSampler(sampler, batch_size, drop_last, wrap_last=wrap_last)
 
-        self.sampler = sampler
-        self.batch_sampler = batch_sampler
+#        self.sampler = sampler
+#        self.batch_sampler = batch_sampler
         self.last_iter = None
 
 class ShardLoader(object):

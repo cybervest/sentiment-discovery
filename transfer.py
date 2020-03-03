@@ -34,6 +34,7 @@ def get_data_and_args():
     args = parser.parse_args()
 
     args.cuda = torch.cuda.is_available()
+    args.pin_memory = args.cuda
 
     if args.seed is not -1:
         torch.manual_seed(args.seed)
@@ -62,7 +63,7 @@ def get_model(args):
     if args.load is not None and args.load != '':
         # load char embedding and recurrent encoder for featurization
         with open(args.load, 'rb') as f:
-            sd = x = torch.load(f)
+            sd = x = torch.load(f, map_location=next(model.parameters()).device)
             if 'sd' in sd:
                 sd = sd['sd']
             if 'lm_encoder' in sd:
@@ -230,6 +231,8 @@ def normalize(coef):
 
 def main():
     (train_data, val_data, test_data), tokenizer, args = get_data_and_args()
+    print(len(train_data))
+    args.pin_memory = args.cuda
     model = get_model(args)
 
     save_root = '' if args.load is None else args.load
@@ -275,7 +278,7 @@ def main():
     start = time.time()
     metric = 'mcc' if args.mcc else 'acc'
     logreg_model, logreg_scores, logreg_probs, c, nnotzero = train_logreg(trXt, trY, vaXt, vaY, teXt, teY, max_iter=args.epochs, eval_test=not args.no_test_eval,
-                                                                          seed=args.seed, report_metric=metric, threshold_metric=metric)
+                                                                          seed=args.seed, report_metric=metric, threshold_metric=metric, penalty = 'none')
     end = time.time()
     elapsed_time = end - start
 
